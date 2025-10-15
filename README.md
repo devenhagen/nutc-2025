@@ -1,2 +1,2 @@
 # nutc-HFT
-Algorithmic trading for the Northwestern Trading Competition's HFT case
+Algorithmic trading for the Northwestern Trading Competition's HFT and Crypto cases
