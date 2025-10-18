@@ -1,5 +1,5 @@
 // =====================================================================================
-// Northwestern Trading Contest â€” CRYPTO strategy (C++20)
+// Northwestern Trading Contest Ã¢â‚¬â€ CRYPTO strategy (C++20)
 // Low-latency market making + sniping + big-print momentum follow, inventory-aware.
 // EXACT same template style as your HFT file (top-of-book only, same API calls).
 // Crypto-specific: 0.4% fee per fill => ~0.8% round trip; we gate quoting on fees.
@@ -29,14 +29,14 @@ class Strategy {
   static constexpr int    NTICK = 3;
   static constexpr float  MIN_TICK = 0.01f;
 
-  // Fees: 0.4% per fill â†’ ~0.8% round-trip; add cushion
+  // Fees: 0.4% per fill Ã¢â€ â€™ ~0.8% round-trip; add cushion
   static constexpr float  FEE_PER_FILL = 0.004f;
   static constexpr float  FEE_ROUNDTRIP = 2.0f * FEE_PER_FILL;  // ~0.8%
   static constexpr float  FEE_GUARD = 0.0095f;                  // require >~0.95% full spread
 
   // Quoting & control
   static constexpr float  EDGE_EPS = 0.002f;         // absolute edge floor
-  static constexpr float  REQUOTE_FRAC = 0.25f;      // reprice if mid shifts â‰¥ 25% of spread
+  static constexpr float  REQUOTE_FRAC = 0.25f;      // reprice if mid shifts Ã¢â€°Â¥ 25% of spread
   static constexpr float  OBI_PULL = 0.70f;          // pull that side if imbalance extreme
   static constexpr float  MOMENTUM_TAKE_OBI = 0.35f; // require some imbalance to chase
 
@@ -124,7 +124,7 @@ class Strategy {
 
     // Inventory skew + momentum lean
     float inv  = pos_[k];
-    float skew = (inv / 1000.0f) * SKEW_PER_1000 * spread;      // widen â€œdangerâ€ side
+    float skew = (inv / 1000.0f) * SKEW_PER_1000 * spread;      // widen Ã¢â‚¬Å“dangerÃ¢â‚¬Â side
     float mom  = (b.ema_fast - b.ema_slow);
     float lean = 0.25f * mom + 0.20f * b.obi * spread;          // steer w/ imbalance & ema
 
