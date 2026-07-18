@@ -7,6 +7,10 @@ on:
     paths:
       - 'lean-fractional-cover/**'
       - '.github/workflows/lean-fractional-cover.yml'
+  pull_request:
+    paths:
+      - 'lean-fractional-cover/**'
+      - '.github/workflows/lean-fractional-cover.yml'
   workflow_dispatch:
 
 permissions:
