@@ -51,7 +51,8 @@ private theorem ramp_zero_low {m j : ℕ} (h : j < m - 1) :
   rw [ramp_zero_raw]
   apply clip01_eq_one_of_one_le
   have hj : j + 2 ≤ m := by omega
-  exact_mod_cast hj
+  have hjq : (j : ℚ) + 2 ≤ (m : ℚ) := by exact_mod_cast hj
+  linarith
 
 private theorem ramp_zero_pred (m : ℕ) (hm : 1 ≤ m) :
     rampNat (3 * m) (m + 1) (m - 1) = 2 / 3 := by
@@ -89,10 +90,15 @@ theorem three_mul_rampMass_zero (m : ℕ) (hm : 1 ≤ m) :
   have hlow :
       (∑ j ∈ Finset.range (m - 1), f j) =
         (binomPrefix (3 * m) (m - 1) : ℚ) := by
-    apply Finset.sum_congr rfl
-    intro j hj
-    have hj' : j < m - 1 := Finset.mem_range.mp hj
-    simp [f, ramp_zero_low hj']
+    calc
+      (∑ j ∈ Finset.range (m - 1), f j) =
+          ∑ j ∈ Finset.range (m - 1), (Nat.choose (3 * m) j : ℚ) := by
+            apply Finset.sum_congr rfl
+            intro j hj
+            have hj' : j < m - 1 := Finset.mem_range.mp hj
+            simp [f, ramp_zero_low hj']
+      _ = (binomPrefix (3 * m) (m - 1) : ℚ) := by
+        simp [binomPrefix]
   have hmstep : m - 1 + 1 = m := by omega
   unfold rampMass
   rw [htrunc]
@@ -116,7 +122,8 @@ private theorem ramp_one_low {m j : ℕ} (h : j < m) :
   rw [ramp_one_raw]
   apply clip01_eq_one_of_one_le
   have hj : j + 1 ≤ m := by omega
-  exact_mod_cast hj
+  have hjq : (j : ℚ) + 1 ≤ (m : ℚ) := by exact_mod_cast hj
+  linarith
 
 private theorem ramp_one_at (m : ℕ) :
     rampNat (3 * m + 1) (m + 1) m = 1 / 2 := by
@@ -145,10 +152,15 @@ theorem three_mul_rampMass_one (m : ℕ) :
   have hlow :
       (∑ j ∈ Finset.range m, f j) =
         (binomPrefix (3 * m + 1) m : ℚ) := by
-    apply Finset.sum_congr rfl
-    intro j hj
-    have hj' : j < m := Finset.mem_range.mp hj
-    simp [f, ramp_one_low hj']
+    calc
+      (∑ j ∈ Finset.range m, f j) =
+          ∑ j ∈ Finset.range m, (Nat.choose (3 * m + 1) j : ℚ) := by
+            apply Finset.sum_congr rfl
+            intro j hj
+            have hj' : j < m := Finset.mem_range.mp hj
+            simp [f, ramp_one_low hj']
+      _ = (binomPrefix (3 * m + 1) m : ℚ) := by
+        simp [binomPrefix]
   unfold rampMass
   rw [htrunc, Finset.sum_range_succ, hlow]
   simp [f, ramp_one_at m, Uone]
@@ -169,7 +181,8 @@ private theorem ramp_two_low {m j : ℕ} (h : j < m - 1) :
   rw [ramp_two_raw]
   apply clip01_eq_one_of_one_le
   have hj : j + 2 ≤ m := by omega
-  exact_mod_cast hj
+  have hjq : (j : ℚ) + 2 ≤ (m : ℚ) := by exact_mod_cast hj
+  linarith
 
 private theorem ramp_two_pred (m : ℕ) (hm : 1 ≤ m) :
     rampNat (3 * m + 2) (m + 2) (m - 1) = 3 / 4 := by
@@ -212,17 +225,23 @@ theorem three_mul_rampMass_two (m : ℕ) (hm : 1 ≤ m) :
   have hlow :
       (∑ j ∈ Finset.range (m - 1), f j) =
         (binomPrefix (3 * m + 2) (m - 1) : ℚ) := by
-    apply Finset.sum_congr rfl
-    intro j hj
-    have hj' : j < m - 1 := Finset.mem_range.mp hj
-    simp [f, ramp_two_low hj']
+    calc
+      (∑ j ∈ Finset.range (m - 1), f j) =
+          ∑ j ∈ Finset.range (m - 1), (Nat.choose (3 * m + 2) j : ℚ) := by
+            apply Finset.sum_congr rfl
+            intro j hj
+            have hj' : j < m - 1 := Finset.mem_range.mp hj
+            simp [f, ramp_two_low hj']
+      _ = (binomPrefix (3 * m + 2) (m - 1) : ℚ) := by
+        simp [binomPrefix]
   have hmstep : m - 1 + 1 = m := by omega
+  have hm2 : 2 + (m - 1) = m + 1 := by omega
   unfold rampMass
   rw [htrunc]
   rw [show m + 2 = (m - 1) + 1 + 1 + 1 by omega]
   rw [Finset.sum_range_succ, Finset.sum_range_succ,
     Finset.sum_range_succ, hlow]
-  simp [f, hmstep, ramp_two_pred m hm, ramp_two_at m,
+  simp [f, hmstep, hm2, ramp_two_pred m hm, ramp_two_at m,
     ramp_two_succ m, Utwo]
   ring
 
