@@ -1,0 +1,28 @@
+name: Lean fractional-cover proof
+
+on:
+  push:
+    branches:
+      - bole-lean-fractional-cover-ci
+    paths:
+      - 'lean-fractional-cover/**'
+      - '.github/workflows/lean-fractional-cover.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: lean-fractional-cover
+          build: true
+          test: false
+          lint: false
+          use-mathlib-cache: true
+          leanchecker: true
+          use-github-cache: true
