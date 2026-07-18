@@ -22,16 +22,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install pinned Lean toolchain
-        uses: leanprover/lean-action@v1
-        with:
-          lake-package-directory: lean-fractional-cover
-          auto-config: false
-          build: false
-          test: false
-          lint: false
-          use-mathlib-cache: false
-          use-github-cache: false
+      - name: Install elan
+        shell: bash
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf \
+            https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            -o /tmp/elan-init.sh
+          sh /tmp/elan-init.sh -y --no-modify-path --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
 
       - name: Resolve dependencies and kernel-build
         id: kernel-build
@@ -40,6 +38,9 @@ jobs:
         run: |
           set +e
           : > build.log
+          echo '===== toolchain =====' | tee -a build.log
+          elan --version 2>&1 | tee -a build.log
+          cat lean-toolchain | tee -a build.log
           echo '===== lake update =====' | tee -a build.log
           lake update 2>&1 | tee -a build.log
           status=${PIPESTATUS[0]}
