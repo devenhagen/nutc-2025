@@ -60,7 +60,9 @@ theorem cutoffZero_eq (m : ℕ) (hm : 1 ≤ m) :
     cutoffZero m =
       3 * binomPrefix (3 * m) m + Nat.choose (3 * m) m := by
   have hsub : 3 * m - (2 * (m - 1) + 1) = m + 1 := by omega
-  simp [cutoffZero, cutoffBound, hsub, binomPrefix_succ]
+  have hmstep : m - 1 + 1 = m := by omega
+  unfold cutoffZero cutoffBound
+  rw [hsub, hmstep, binomPrefix_succ]
   omega
 
 /-- Closed form of the old cutoff at `t=m` when `k=3m+1`. -/
@@ -86,7 +88,13 @@ theorem choose_three_mul_add_two_succ (m : ℕ) :
   have h := Nat.choose_succ_right_eq (3 * m + 2) m
   have hsub : 3 * m + 2 - m = 2 * (m + 1) := by omega
   rw [hsub] at h
-  omega
+  have h' : Nat.choose (3 * m + 2) (m + 1) * (m + 1) =
+      (2 * Nat.choose (3 * m + 2) m) * (m + 1) := by
+    calc
+      Nat.choose (3 * m + 2) (m + 1) * (m + 1) =
+          Nat.choose (3 * m + 2) m * (2 * (m + 1)) := h
+      _ = (2 * Nat.choose (3 * m + 2) m) * (m + 1) := by ring
+  exact Nat.mul_right_cancel h'
 
 /-- Exact gap in residue class `0 mod 3`. -/
 theorem cutoffZero_sub_Uzero (m : ℕ) (hm : 1 ≤ m) :
@@ -118,8 +126,9 @@ theorem cutoffTwo_sub_Utwo (m : ℕ) (hm : 1 ≤ m) :
   rw [hm1] at hp0
   have hp1 := binomPrefix_succ (3 * m + 2) m
   rw [hp1, hp0]
+  unfold Utwo
   rw [choose_three_mul_add_two_succ]
-  norm_num [Utwo]
+  norm_num
   ring
 
 /-- A positive rational gap below an integral bound gives the one-unit
