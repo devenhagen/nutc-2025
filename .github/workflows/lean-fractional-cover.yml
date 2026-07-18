@@ -38,10 +38,11 @@ jobs:
         run: |
           set +e
           : > build.log
-          # Lean 4.31 provides `omega` upstream; mathlib 4.31 has no
-          # `Mathlib.Tactic.Omega` source module.  Keep this compatibility
-          # edit here while the clean source update is prepared.
+          # Compatibility edits for the Lean 4.31 / mathlib 4.31 hierarchy.
           sed -i '/^import Mathlib.Tactic.Omega$/d' CoprimeAdjacent/Core.lean
+          find CoprimeAdjacent -name '*.lean' -print0 | xargs -0 sed -i \
+            -e 's/\[LinearOrderedField K\]/[Field K] [LinearOrder K] [IsStrictOrderedRing K]/g' \
+            -e 's/\[LinearOrderedField R\]/[Field R] [LinearOrder R] [IsStrictOrderedRing R]/g'
           echo '===== toolchain =====' | tee -a build.log
           elan --version 2>&1 | tee -a build.log
           cat lean-toolchain | tee -a build.log
@@ -62,7 +63,7 @@ jobs:
           echo '===== concise Lean diagnostics ====='
           cat build-errors.txt
           echo '===== tail of full build log ====='
-          tail -n 220 build.log
+          tail -n 260 build.log
           exit "$status"
 
       - name: Upload Lean diagnostics
