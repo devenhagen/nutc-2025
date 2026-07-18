@@ -94,7 +94,7 @@ theorem choose_three_mul_add_two_succ (m : ℕ) :
       Nat.choose (3 * m + 2) (m + 1) * (m + 1) =
           Nat.choose (3 * m + 2) m * (2 * (m + 1)) := h
       _ = (2 * Nat.choose (3 * m + 2) m) * (m + 1) := by ring
-  exact Nat.mul_right_cancel h'
+  exact Nat.mul_right_cancel (by omega : 0 < m + 1) h'
 
 /-- Exact gap in residue class `0 mod 3`. -/
 theorem cutoffZero_sub_Uzero (m : ℕ) (hm : 1 ≤ m) :
