@@ -34,7 +34,7 @@ theorem choose_le_of_le_of_twice_le {k r s : ℕ}
       have hstep : Nat.choose k (r + q) < Nat.choose k (r + q + 1) := by
         apply choose_lt_succ_of_twice_lt
         omega
-      exact ih.trans hstep.le
+      exact (ih (by omega) (by omega)).trans hstep.le
 
 /-- Strict monotonicity in the lower binomial index on the left half. -/
 theorem choose_lt_of_lt_of_twice_le {k r s : ℕ}
@@ -134,11 +134,13 @@ theorem binomPrefix_eq_full {k r : ℕ} (h : k + 1 ≤ r) :
   rw [show k + 1 + q = (k + 1) + q by rfl]
   unfold binomPrefix
   rw [Finset.sum_range_add]
-  simp only [Finset.sum_eq_zero]
-  intro i hi
-  apply Nat.choose_eq_zero_of_lt
-  have : i < q := Finset.mem_range.mp hi
-  omega
+  have hz : (∑ i ∈ Finset.range q, Nat.choose k (k + 1 + i)) = 0 := by
+    apply Finset.sum_eq_zero
+    intro i hi
+    apply Nat.choose_eq_zero_of_lt
+    have hi' : i < q := Finset.mem_range.mp hi
+    omega
+  simpa [hz]
 
 /-- The center cutoff used in the exact optimization. -/
 def centerCutoffIndex (k : ℕ) : ℕ := (k - 1) / 3
@@ -166,19 +168,26 @@ theorem optimizedCutoff_le (k t : ℕ) (hk : 3 ≤ k) :
       le_rfl hleft
   · have ht₀t : t₀ ≤ t := Nat.le_of_not_ge hleft
     by_cases htk : t ≤ k
-    · exact Nat.le_induction le_rfl
+    · exact Nat.le_induction
+        (motive := fun s _ ↦ cutoffBound k t₀ ≤ cutoffBound k s)
+        le_rfl
         (fun s hs ih ↦ ih.trans (cutoffBound_step_up
-          (by omega) (by omega)).le) t ht₀t
+          (k := k) (t := s) (by omega) (by omega)).le)
+        t ht₀t
     · have htoK : cutoffBound k t = cutoffBound k k := by
         have hkt : k ≤ t := Nat.le_of_not_ge htk
         have hfirst := binomPrefix_eq_full (k := k) (r := t + 1) (by omega)
         have htailT : k - (2 * t + 1) = 0 := by omega
         have htailK : k - (2 * k + 1) = 0 := by omega
-        simp [cutoffBound, hfirst, htailT, htailK]
+        unfold cutoffBound
+        rw [hfirst, htailT, htailK]
       rw [htoK]
-      exact Nat.le_induction le_rfl
+      exact Nat.le_induction
+        (motive := fun s _ ↦ cutoffBound k t₀ ≤ cutoffBound k s)
+        le_rfl
         (fun s hs ih ↦ ih.trans (cutoffBound_step_up
-          (by omega) (by omega)).le) k (by omega)
+          (k := k) (t := s) (by omega) (by omega)).le)
+        k (by omega)
 
 /-- The optimizer specializes to `m-1,m,m` in the three residue classes. -/
 @[simp] theorem centerCutoffIndex_zero (m : ℕ) (hm : 1 ≤ m) :
@@ -189,7 +198,6 @@ theorem optimizedCutoff_le (k t : ℕ) (hk : 3 ≤ k) :
 @[simp] theorem centerCutoffIndex_one (m : ℕ) :
     centerCutoffIndex (3 * m + 1) = m := by
   simp [centerCutoffIndex]
-  omega
 
 @[simp] theorem centerCutoffIndex_two (m : ℕ) :
     centerCutoffIndex (3 * m + 2) = m := by
