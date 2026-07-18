@@ -1,0 +1,75 @@
+name: Lean fractional-cover proof
+
+on:
+  push:
+    branches:
+      - bole-lean-fractional-cover-ci
+    paths:
+      - 'lean-fractional-cover/**'
+      - '.github/workflows/lean-fractional-cover.yml'
+  pull_request:
+    paths:
+      - 'lean-fractional-cover/**'
+      - '.github/workflows/lean-fractional-cover.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install elan
+        shell: bash
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf \
+            https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            -o /tmp/elan-init.sh
+          sh /tmp/elan-init.sh -y --no-modify-path --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Resolve dependencies and kernel-build
+        id: kernel-build
+        working-directory: lean-fractional-cover
+        shell: bash
+        run: |
+          set +e
+          : > build.log
+          # The `omega` tactic is supplied upstream by Lean 4.15; there is no
+          # separate `Mathlib.Tactic.Omega` source module in this release.
+          sed -i '/^import Mathlib.Tactic.Omega$/d' CoprimeAdjacent/Core.lean
+          echo '===== toolchain =====' | tee -a build.log
+          elan --version 2>&1 | tee -a build.log
+          cat lean-toolchain | tee -a build.log
+          echo '===== lake update =====' | tee -a build.log
+          lake update 2>&1 | tee -a build.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" -eq 0 ]; then
+            echo '===== mathlib cache =====' | tee -a build.log
+            lake exe cache get 2>&1 | tee -a build.log
+            status=${PIPESTATUS[0]}
+          fi
+          if [ "$status" -eq 0 ]; then
+            echo '===== lake build =====' | tee -a build.log
+            lake build 2>&1 | tee -a build.log
+            status=${PIPESTATUS[0]}
+          fi
+          grep -nE 'error:|warning: declaration uses|failed to synthesize|unsolved goals|unknown constant|unknown identifier|unexpected token|error\[' build.log > build-errors.txt || true
+          echo '===== concise Lean diagnostics ====='
+          cat build-errors.txt
+          echo '===== tail of full build log ====='
+          tail -n 260 build.log
+          exit "$status"
+
+      - name: Upload Lean diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lean-build-diagnostics
+          path: |
+            lean-fractional-cover/build.log
+            lean-fractional-cover/build-errors.txt
+          if-no-files-found: error
