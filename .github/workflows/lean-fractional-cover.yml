@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Lean and mathlib cache
+      - name: Install pinned Lean toolchain
         uses: leanprover/lean-action@v1
         with:
           lake-package-directory: lean-fractional-cover
@@ -30,22 +30,34 @@ jobs:
           build: false
           test: false
           lint: false
-          use-mathlib-cache: true
-          use-github-cache: true
+          use-mathlib-cache: false
+          use-github-cache: false
 
-      - name: Kernel build with captured diagnostics
+      - name: Resolve dependencies and kernel-build
         id: kernel-build
         working-directory: lean-fractional-cover
         shell: bash
         run: |
           set +e
-          lake build > build.log 2>&1
-          status=$?
-          grep -nE 'error:|warning: declaration uses|failed to synthesize|unsolved goals|unknown constant|unknown identifier|unexpected token' build.log > build-errors.txt || true
+          : > build.log
+          echo '===== lake update =====' | tee -a build.log
+          lake update 2>&1 | tee -a build.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" -eq 0 ]; then
+            echo '===== mathlib cache =====' | tee -a build.log
+            lake exe cache get 2>&1 | tee -a build.log
+            status=${PIPESTATUS[0]}
+          fi
+          if [ "$status" -eq 0 ]; then
+            echo '===== lake build =====' | tee -a build.log
+            lake build 2>&1 | tee -a build.log
+            status=${PIPESTATUS[0]}
+          fi
+          grep -nE 'error:|warning: declaration uses|failed to synthesize|unsolved goals|unknown constant|unknown identifier|unexpected token|error\[' build.log > build-errors.txt || true
           echo '===== concise Lean diagnostics ====='
           cat build-errors.txt
           echo '===== tail of full build log ====='
-          tail -n 160 build.log
+          tail -n 180 build.log
           exit "$status"
 
       - name: Upload Lean diagnostics
