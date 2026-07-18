@@ -21,12 +21,39 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: leanprover/lean-action@v1
+
+      - name: Set up Lean and mathlib cache
+        uses: leanprover/lean-action@v1
         with:
           lake-package-directory: lean-fractional-cover
-          build: true
+          auto-config: false
+          build: false
           test: false
           lint: false
           use-mathlib-cache: true
-          leanchecker: true
           use-github-cache: true
+
+      - name: Kernel build with captured diagnostics
+        id: kernel-build
+        working-directory: lean-fractional-cover
+        shell: bash
+        run: |
+          set +e
+          lake build > build.log 2>&1
+          status=$?
+          grep -nE 'error:|warning: declaration uses|failed to synthesize|unsolved goals|unknown constant|unknown identifier|unexpected token' build.log > build-errors.txt || true
+          echo '===== concise Lean diagnostics ====='
+          cat build-errors.txt
+          echo '===== tail of full build log ====='
+          tail -n 160 build.log
+          exit "$status"
+
+      - name: Upload Lean diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lean-build-diagnostics
+          path: |
+            lean-fractional-cover/build.log
+            lean-fractional-cover/build-errors.txt
+          if-no-files-found: error
